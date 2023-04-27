@@ -5,10 +5,10 @@ services:
     ports:
       - "2700:2700"
     volumes:
-      - ./vosk/vosk-model-ru-0.22:/opt/vosk/vosk-model-ru-0.22
+      - ./vosk/vosk-model-ru-0.42:/opt/vosk/vosk-model-ru-0.42
       - ./vosk/vosk-model-spk-0.4:/opt/vosk/vosk-model-spk-0.4
     environment:
-        VOSK_MODEL_PATH: "/opt/vosk/vosk-model-ru-0.22"
+        VOSK_MODEL_PATH: "/opt/vosk/vosk-model-ru-0.42"
         VOSK_SPK_MODEL_PATH: "/opt/vosk/vosk-model-spk-0.4"
   transcript:
     image: bogdal1993/base_audio_process
