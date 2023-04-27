@@ -1,0 +1,38 @@
+services:
+  vosk:
+    image: alphacep/kaldi-ru:latest
+    restart: always 
+    ports:
+      - "2700:2700"
+    volumes:
+      - ./vosk/vosk-model-ru-0.22:/opt/vosk/vosk-model-ru-0.22
+      - ./vosk/vosk-model-spk-0.4:/opt/vosk/vosk-model-spk-0.4
+    environment:
+        VOSK_MODEL_PATH: "/opt/vosk/vosk-model-ru-0.22"
+        VOSK_SPK_MODEL_PATH: "/opt/vosk/vosk-model-spk-0.4"
+  transcript:
+    image: bogdal1993/base_audio_process
+    restart: always 
+    volumes:
+      - ./transcript_server/transcript.py:/opt/transcript_server/transcript.py
+      - ./transcript_server/media:/opt/media
+      - ./transcript_server/tempmedia:/opt/tempmedia
+    environment:
+        DSN: "postgresql://user:pass@host:port/db"
+        VOSK_SERVER: "ws://127.0.0.1:2700"
+    working_dir: /opt/transcript_server/
+    command: python transcript.py
+    depends_on:
+      - vosk
+      - file_api
+  text_processor:
+    image: bogdal1993/text_processing
+    restart: always 
+    volumes:
+      - ./text_processor/textprocessor.py:/opt/text_processor/textprocessor.py
+      - ./text_processor/ruword2tags/ruword2tags.db:/root/.ruword2tags/ruword2tags.db
+      - ./text_processor/deeppavlov:/root/.deeppavlov
+    environment:
+        DSN: "postgresql://user:pass@host:port/db"
+    working_dir: /opt/text_processor/
+    command: python textprocessor.py
