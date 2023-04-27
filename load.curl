@@ -1,0 +1,11 @@
+curl --request POST \
+  --url http://192.168.0.172/api/file/files/ \
+  --header 'Content-Type: multipart/form-data' \
+  --form 'call_start_ts=2023-01-22 11:25:04' \
+  --form 'call_end_ts=2023-01-22 11:27:58' \
+  --form caller=1002 \
+  --form calle=1001 \
+  --form duration=174 \
+  --form save_file=True \
+  --form 'media=@G:\programm\Voice Perception\testaudio\glue\3.mp3' \
+  --form direction=outbound
