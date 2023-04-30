@@ -42,3 +42,16 @@ text_processor\ruword2tags
 
 Устанавливаем nginx и прописываем конфигурацию как в файле default  
 Указываем корректный путь до директории web_node\web в location / 
+
+**Пример интерфейса**
+
+Основной интерфейс просмотра звонков
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143825.jpg?raw=true "Основной интерфейс")
+
+
+Интерфейс графических отчетов
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143822.jpg?raw=true "Интерфейс графических отчетов")
+
+
+Интерфейс поиска по тексту
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
