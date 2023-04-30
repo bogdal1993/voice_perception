@@ -6,24 +6,21 @@
 **Worker node**
 
 
-Перейти в директорию worker_node
+1. Перейти в директорию worker_node
 ```
 cd worker_node
 ```
-в файле docker-compose.yml изменить параметры подключения к БД в DSN, вместо 
+2. в файле docker-compose.yml изменить параметры подключения к БД в DSN, вместо 
 ```
 postgresql://user:pass@host:port/db
 ```
 прописать ваши данные  
 
 
-в переменной VOSK_SERVER указать адрес текущей машины или вместо 127.0.0.1 прописать vosk  
+3. в переменной VOSK_SERVER указать адрес текущей машины или вместо 127.0.0.1 прописать vosk  
 
+4. Скачать нужные файлы моделей
 
-Запустить через 
-```
-docker-compose up -d
-```
 в директорию 
 ```
 cd vosk 
@@ -36,6 +33,11 @@ cd vosk
 text_processor\ruword2tags
 ```
 скачиваем файл ruword2tags.db по ссылке в **load.txt**  
+
+5. Запустить через 
+```
+docker-compose up -d
+```
 
 **Web node**  
 
@@ -55,3 +57,6 @@ text_processor\ruword2tags
 
 Интерфейс поиска по тексту
 ![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
+
+
+В проекте используются модели Vosk, DeepPavlov, I.Koziev
