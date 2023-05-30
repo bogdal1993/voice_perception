@@ -24,7 +24,7 @@ services:
     command: python transcript.py
     depends_on:
       - vosk
-      - file_api
+
   text_processor:
     image: bogdal1993/text_processing
     restart: always 
