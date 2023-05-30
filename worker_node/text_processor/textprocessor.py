@@ -19,7 +19,7 @@ DSN = os.getenv('DSN')
 threaded_postgreSQL_pool = pool.ThreadedConnectionPool(1, 3, DSN)
 
 #model = build_model(configs.classifiers.rusentiment_bert, download=False)
-model = build_model(configs.classifiers.rusentiment_convers_bert, download=False)
+model = build_model(configs.classifiers.rusentiment_convers_bert, download=True)
 
 print("ff", flush=True)
 print(model(['алло'])[0], flush=True)
