@@ -143,7 +143,7 @@ def worker():
 			print(d, flush=True)
 		finally:
 			threaded_postgreSQL_pool.putconn(conn)
-		os.remove(file_path)
+		#os.remove(file_path)
 		q.task_done()
 
 for i in range(16):
