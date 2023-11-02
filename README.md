@@ -82,4 +82,4 @@ APIURL: "http://127.0.0.1/api/file/"
 В проекте используются модели Vosk, DeepPavlov, I.Koziev
 
 
-Присоединяйтесь к сообществу https://t.me/+mP0I5NnJrHM2YWEy
+Присоединяйтесь к сообществу https://t.me/voiceperception
