@@ -1,1 +1,1 @@
-https://disk.yandex.ru/d/7jfenn0jNjCE7g
+https://huggingface.co/bogdal/ruword2tags/resolve/main/ruword2tags.db
