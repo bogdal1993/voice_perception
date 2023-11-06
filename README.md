@@ -90,6 +90,9 @@ docker-compose up -d
 Интерфейс поиска по тексту
 ![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
 
+Суммаризация по тексту
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/summarize.JPG?raw=true "Суммаризация по тексту")
+
 
 В проекте используются модели Vosk, DeepPavlov, I.Koziev
 
