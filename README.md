@@ -71,6 +71,7 @@ llm_node\summarization_server\load_model.sh
 ```
 docker-compose up -d
 ```
+PS: Для работы предпочтительно использовать GPU, по его настройке прошу обращаться в группу в телеграм
 
 **Загрузка аудио**
 
