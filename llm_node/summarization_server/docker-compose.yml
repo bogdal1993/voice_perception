@@ -1,7 +1,13 @@
-version: '2'
+version: '3'
+networks:
+  default:
+    external:
+      name: my_network
 services:
   llm_server_sum:
     image: bogdal1993/llm_server
+    networks:
+      - default
     restart: always 
     ports:
       - "8005:8005"

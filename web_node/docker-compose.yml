@@ -1,12 +1,27 @@
-version: '2'
+version: '3'
+networks:
+  default:
+    external:
+      name: my_network
 services:
+  nginx:
+    image: "nginx:stable"
+    volumes:
+      - ./web:/mnt/vp/web
+    networks:
+      - default
+    container_name: nginx
+    ports:
+      - "80:80"
   file_api:
     image: bogdal1993/baseweb
+    networks:
+      - default
     restart: always 
     ports:
       - "8000:8000"
     environment:
-        DSN: "postgresql://user:pass@host:port/db"
+        DSN: "postgresql://user:pass@db:5432/tpdb"
         APIURL: "http://127.0.0.1/api/file/"
     volumes:
       - ./file_api/main.py:/opt/file_api/main.py
@@ -15,11 +30,13 @@ services:
     command: uvicorn main:app --port 8000 --host 0.0.0.0
   backend_api:
     image: bogdal1993/baseweb
+    networks:
+      - default
     restart: always 
     ports:
       - "8001:8001"
     environment:
-        DSN: "postgresql://user:pass@host:port/db"
+        DSN: "postgresql://user:pass@db:5432/tpdb"
     volumes:
       - ./backend_api/main.py:/opt/backend_api/main.py
       - ./media:/opt/media
