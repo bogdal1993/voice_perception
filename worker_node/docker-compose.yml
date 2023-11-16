@@ -1,6 +1,34 @@
+version: '3'
+networks:
+  default:
+    external:
+      name: my_network
 services:
+  db:
+    build:
+      context: .
+      dockerfile: postgres.dockerfile
+    image: "postgres-tpdb"
+    networks:
+      - default
+    volumes:
+      - tpdb:/var/lib/postgresql/data/tbdp
+    environment:
+      PGDATA: /var/lib/postgresql/data/tbdp
+      POSTGRES_DB: tpdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_SERVER: localhost
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    restart: unless-stopped
   vosk:
     image: alphacep/kaldi-ru:latest
+    networks:
+      - default
     restart: always 
     ports:
       - "2700:2700"
@@ -12,27 +40,37 @@ services:
         VOSK_SPK_MODEL_PATH: "/opt/vosk/vosk-model-spk-0.4"
   transcript:
     image: bogdal1993/base_audio_process
-    restart: always 
+    networks:
+      - default
+    restart: always
     volumes:
       - ./transcript_server/transcript.py:/opt/transcript_server/transcript.py
       - ./transcript_server/media:/opt/media
       - ./transcript_server/tempmedia:/opt/tempmedia
     environment:
-        DSN: "postgresql://user:pass@host:port/db"
-        VOSK_SERVER: "ws://127.0.0.1:2700"
+        DSN: "postgresql://user:pass@db:5432/tpdb"
+        VOSK_SERVER: "ws://vosk:2700"
     working_dir: /opt/transcript_server/
     command: python transcript.py
     depends_on:
       - vosk
+      - db
 
   text_processor:
     image: bogdal1993/text_processing
-    restart: always 
+    networks:
+      - default
+    restart: always
+    depends_on:
+      - db
     volumes:
       - ./text_processor/textprocessor.py:/opt/text_processor/textprocessor.py
       - ./text_processor/ruword2tags/ruword2tags.db:/root/.ruword2tags/ruword2tags.db
       - ./text_processor/deeppavlov:/root/.deeppavlov
     environment:
-        DSN: "postgresql://user:pass@host:port/db"
+        DSN: "postgresql://user:pass@db:5432/tpdb"
     working_dir: /opt/text_processor/
     command: python textprocessor.py
+
+volumes:
+  tpdb:
