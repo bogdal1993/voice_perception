@@ -36,3 +36,14 @@ services:
         DSN: "postgresql://user:pass@host:port/db"
     working_dir: /opt/text_processor/
     command: python textprocessor.py
+    
+  tag_server:
+    image: bogdal1993/text_processing
+    restart: always
+    volumes:
+      - ./tag_server/tagserver.py:/opt/tag_server/tagserver.py
+      - ./tag_server/cache:/root
+    environment:
+        DSN: "postgresql://user:pass@host:port/db"
+    working_dir: /opt/tag_server/
+    command: python tagserver.py

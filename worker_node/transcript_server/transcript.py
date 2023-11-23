@@ -134,7 +134,7 @@ def worker():
 			cur = conn.cursor()
 			cur.execute("INSERT INTO vp.calls_transcription(call_uuid, transcription) VALUES (%s, %s) ON CONFLICT ON CONSTRAINT calls_transcription_pkey DO NOTHING;",(call_uuid,json.dumps(transcriptions),))
 			conn.commit()
-			cur.execute("INSERT INTO vp.tasks(call_uuid, task) VALUES (%s, %s) ON CONFLICT ON CONSTRAINT tasks_pkey DO NOTHING;",(call_uuid,'{"transcript": "OK","text_process": "ready"}',))
+			cur.execute("INSERT INTO vp.tasks(call_uuid, task) VALUES (%s, %s) ON CONFLICT ON CONSTRAINT tasks_pkey DO NOTHING;",(call_uuid,'{"transcript": "OK","text_process": "ready","tag_process":"wait"}',))
 			conn.commit()
 			cur.execute("delete from vp.transcript_queue where call_uuid = %s",(call_uuid,))
 			conn.commit()

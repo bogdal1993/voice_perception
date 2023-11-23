@@ -74,6 +74,22 @@ CREATE TABLE vp.transcript_queue (
     call_uuid uuid NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS vp.calls_tags
+(
+    call_uuid uuid NOT NULL,
+    tags_json jsonb,
+    CONSTRAINT calls_tags_pkey PRIMARY KEY (call_uuid)
+);
+
+CREATE TABLE IF NOT EXISTS vp.tags_core
+(
+    tag_id serial,
+    tag_name character varying NOT NULL,
+    tag_spk integer NOT NULL,
+    tag_texts jsonb,
+    CONSTRAINT tags_core_pkey PRIMARY KEY (tag_id)
+);
+
 
 --
 -- Name: calls_meta calls_meta_pkey; Type: CONSTRAINT; Schema: vp; Owner: -

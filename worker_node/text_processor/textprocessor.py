@@ -52,6 +52,7 @@ def process_call_transcript(call_uuid,task_data):
 	cur = conn.cursor()
 	cur.execute("UPDATE vp.calls_transcription SET transcription = %s where call_uuid = %s",(json.dumps(transcription), call_uuid,))
 	task_data['text_process'] = "OK"
+	task_data['tag_process'] = "ready"
 	cur.execute("UPDATE vp.tasks SET task = %s where call_uuid = %s",(json.dumps(task_data), call_uuid,))
 	conn.commit()
 	cur.close()

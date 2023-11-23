@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, Form, UploadFile, BackgroundTasks, Request, HTTPException,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
@@ -63,6 +64,12 @@ class statFiltersCount(BaseModel):
     callee: str
     sampling: str = 'day'
     
+class TagItem(BaseModel):
+    tag_id: int
+    tag_name: str
+    tag_spk: int
+    tag_texts: List[str]
+    
 
 DSN = os.getenv('DSN')
 class Database():
@@ -81,6 +88,12 @@ async def get_call_transcript(call_uuid: str):
     async with db.pool.acquire() as con:
         row = await con.fetchrow('SELECT transcription FROM vp.calls_transcription where call_uuid = $1', call_uuid)
         return json.loads(row['transcription'])
+        
+@app.get("/call_tags/{call_uuid}")
+async def get_call_tags(call_uuid: str):
+    async with db.pool.acquire() as con:
+        row = await con.fetchrow('SELECT tags_json FROM vp.calls_tags where call_uuid = $1', call_uuid)
+        return json.loads(row['tags_json'])
         
         
 @app.post("/stats/emotions")
@@ -159,12 +172,71 @@ async def get_stats_counts(statFilters: statFiltersCount):
         statFilters.caller,
         statFilters.callee,
         statFilters.sampling)
-        return row        
+        return row    
+
+@app.post("/stats/tagscount")
+async def get_stats_tagscount(statFilters: statFilters):
+    async with db.pool.acquire() as con:
+        row = await con.fetch("""SELECT  arr.tags_json ->> 'tag' as label,
+        count(arr.call_uuid) as value
+            FROM vp.calls_tags t,
+        jsonb_array_elements(tags_json) with ordinality arr(tags_json, call_uuid) 
+            where t.call_uuid in (
+                SELECT call_uuid
+                FROM vp.calls
+                where caller like ($3)
+                and calle like ($4)
+                and call_start_ts between $1 and $2
+            )
+            and arr.tags_json ->> 'spk' = $5
+            group by label
+            order by label""",
+        statFilters.startDate,
+        statFilters.endDate,
+        statFilters.caller,
+        statFilters.callee,
+        statFilters.spk)
+        return row
+		
+@app.post("/stats/tagspercent")
+async def get_stats_tagspercent(statFilters: statFilters):
+    async with db.pool.acquire() as con:
+        row = await con.fetch("""(SELECT 
+    arr.tags_json ->> 'tag' as label,        
+    count(arr.call_uuid)::numeric/ (SELECT COUNT(*) FROM vp.calls 
+        WHERE caller LIKE ($3) 
+        AND calle LIKE ($4) 
+        AND call_start_ts BETWEEN $1 and $2
+    )*100 as value
+FROM 
+    vp.calls_tags t,        
+    jsonb_array_elements(tags_json) with ordinality arr(tags_json, call_uuid) 
+WHERE 
+    t.call_uuid IN (
+        SELECT call_uuid
+        FROM vp.calls                
+        WHERE caller LIKE ($3)
+        AND calle LIKE ($4)                
+        AND call_start_ts BETWEEN $1 and $2
+    )            
+    AND arr.tags_json ->> 'spk' = $5
+GROUP BY 
+    label            
+ORDER BY 
+    label)
+union all
+select 'ALL', 100""",
+        statFilters.startDate,
+        statFilters.endDate,
+        statFilters.caller,
+        statFilters.callee,
+        statFilters.spk)
+        return row		
 
 @app.post("/calls/")
 async def get_calls(callFilter: callFilters):
     async with db.pool.acquire() as con:
-        row = await con.fetch("""SELECT * 
+        row = await con.fetch("""SELECT call_uuid, call_start_ts, caller, calle, duration, direction 
         FROM vp.calls 
         WHERE call_start_ts BETWEEN $4 and $3 
         and caller like ($5)
@@ -191,7 +263,7 @@ async def get_calls(callFilter: callFiltersWord):
     callFilter.words2 = ["'%"+x['value']+"%'" for x in callFilter.words2]
     formatted_transcription_filter = format_filter_transcription(callFilter.words1,callFilter.words2)
     async with db.pool.acquire() as con:
-        row = await con.fetch("""SELECT c.*,
+        row = await con.fetch("""SELECT c.call_uuid, c.call_start_ts, c.caller, c.calle, c.duration, c.direction,
 arr.transcription ->> 'text' as text
             FROM vp.calls_transcription t,
         jsonb_array_elements(transcription) with ordinality arr(transcription, call_uuid) 
@@ -213,3 +285,53 @@ arr.transcription ->> 'text' as text
         callFilter.caller,
         callFilter.callee)
         return row    
+
+
+async def update_tag(tag_id: int, updated_tag: TagItem):
+    async with db.pool.acquire() as connection:
+        await connection.execute(
+            "UPDATE vp.tags_core SET tag_texts = $1, tag_spk = $2, tag_name = $3 WHERE tag_id = $4",
+            json.dumps(updated_tag.tag_texts), updated_tag.tag_spk, updated_tag.tag_name, tag_id
+        )
+        
+async def create_new_tag(new_tag: TagItem):
+    async with db.pool.acquire() as connection:
+        row = await connection.fetch(
+            "INSERT into vp.tags_core(tag_name, tag_spk, tag_texts) values($1,$2,$3) returning tag_id",
+            new_tag.tag_name,new_tag.tag_spk,json.dumps(new_tag.tag_texts)
+        )
+        return row[0]
+		
+async def delete_tag_by_id(tag_id: int):
+    async with db.pool.acquire() as connection:
+        await connection.execute(
+            "delete from vp.tags_core WHERE tag_id = $1", tag_id
+        )
+		
+
+@app.get("/tags")
+async def get_tags_list():
+    async with db.pool.acquire() as con:
+        await con.set_type_codec(
+            'json',
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema='pg_catalog'
+        )
+        row = await con.fetch("SELECT tag_id, tag_name, tag_spk, tag_texts::json FROM vp.tags_core order by tag_id")
+        return row
+        
+@app.put("/tag/{tag_id}")
+async def save_tag(tag_id: int, updated_tag: TagItem):
+    await update_tag(tag_id, updated_tag)
+    return {"message": f"Тег {tag_id} успешно сохранен"}
+    
+@app.post("/tag")
+async def create_tag(new_tag: TagItem):
+    row = await create_new_tag(new_tag)
+    return {"message": f"Тег успешно создан","row":row}
+	
+@app.delete("/tag/{tag_id}")
+async def delete_tag(tag_id: int):
+    row = await delete_tag_by_id(tag_id)
+    return {"message": f"Тег успешно удален"}

@@ -1,0 +1,4 @@
+FROM bogdal1993/baseweb:latest
+RUN python -m pip install llama-cpp-python requests --no-cache
+ADD . .
+CMD uvicorn main:app
