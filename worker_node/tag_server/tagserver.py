@@ -15,7 +15,8 @@ if torch.cuda.is_available():
     model.cuda()
 
 def predict_zero_shot(text, label_texts, model, tokenizer, label='entailment', normalize=False,thresh = 0.7):
-    label_texts
+    if not label_texts:
+        return []
     tokens = tokenizer([text] * len(label_texts), label_texts, truncation=True, return_tensors='pt', padding=True)
     with torch.inference_mode():
         result = torch.softmax(model(**tokens.to(model.device)).logits, -1)
