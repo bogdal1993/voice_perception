@@ -1,5 +1,5 @@
 # voice_perception
-![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-08-29%20210405.jpg?raw=true "Основной интерфейс")
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/docs/Annotation%202023-08-29%20210405.jpg?raw=true "Основной интерфейс")
 
 Система речевой аналитики на базе Vosk  
 Основные фукнции
@@ -81,15 +81,15 @@ docker-compose up -d
 **Пример интерфейса**
 
 Основной интерфейс просмотра звонков
-![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143825.jpg?raw=true "Основной интерфейс")
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/docs/Annotation%202023-04-30%20143825.jpg?raw=true "Основной интерфейс")
 
 
 Интерфейс графических отчетов
-![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143822.jpg?raw=true "Интерфейс графических отчетов")
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/docs/Annotation%202023-04-30%20143822.jpg?raw=true "Интерфейс графических отчетов")
 
 
 Интерфейс поиска по тексту
-![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
+![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/docs/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
 
 
 В проекте используются модели Vosk, DeepPavlov, I.Koziev
