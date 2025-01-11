@@ -15,7 +15,24 @@
 
 Установить БД postgres и запустить инициализирующий скрипт *initial.sql*
 
-**Worker node**
+**Single node. GigaAM**
+Проще всего установить на одном сервере.
+Перейти в директорию full_node
+```
+cd full_node
+```
+
+в файле .env прописать/заменить свой DSN к БД postgresql
+```
+DSN=postgresql://user:pass@server:port/db_names
+```
+
+Запустить через 
+```
+docker-compose up -d
+```
+
+**Worker node. Vosk**
 
 
 1. Перейти в директорию worker_node
