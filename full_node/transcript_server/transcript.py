@@ -124,7 +124,7 @@ def convert_audio(file_path: str, call_uuid: str) -> Optional[str]:
 # Обработка задачи воркером
 def worker(task_queue: multiprocessing.JoinableQueue, db_pool: psycopg2.pool.ThreadedConnectionPool) -> None:
     from tr_lib import process_audio  # Импорт внутри функции worker
-
+    db_pool = init_db_pool()
     while True:
         try:
             file_path, call_uuid, file_server = task_queue.get()
