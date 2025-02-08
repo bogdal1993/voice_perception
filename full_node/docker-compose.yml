@@ -21,6 +21,7 @@ services:
       - ./transcript_server/media:/opt/media
       - ./transcript_server/models:/opt/transcript_server/models
       - ./transcript_server/tempmedia:/opt/tempmedia
+      - ./transcript_server/models/cache:/root
     env_file:
       - .env
     working_dir: /opt/transcript_server/
