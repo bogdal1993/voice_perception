@@ -309,7 +309,7 @@ async def delete_tag_by_id(tag_id: int):
         )
 		
 
-@app.get("/tags")
+@app.get("/tags/")
 async def get_tags_list():
     async with db.pool.acquire() as con:
         await con.set_type_codec(
@@ -326,7 +326,7 @@ async def save_tag(tag_id: int, updated_tag: TagItem):
     await update_tag(tag_id, updated_tag)
     return {"message": f"Тег {tag_id} успешно сохранен"}
     
-@app.post("/tag")
+@app.post("/tag/")
 async def create_tag(new_tag: TagItem):
     row = await create_new_tag(new_tag)
     return {"message": f"Тег успешно создан","row":row}
