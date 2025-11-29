@@ -20,7 +20,8 @@ diarization_model = wespeaker.load_model(MODEL_NAME_DIAR)
 torch.set_num_threads(NUM_THREADS)
 
 # Загрузка модели распознавания речи
-asr_model_name = "v2_ctc"
+# Load ASR model name from environment variable, default to "v2_ctc"
+asr_model_name = os.getenv("ASR_MODEL_NAME", "v2_ctc")
 asr_model = gigaam.load_model(asr_model_name)
 
 # Загрузка модели распознавания эмоций

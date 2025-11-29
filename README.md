@@ -18,7 +18,20 @@
 ```
 DSN=postgresql://user:pass@server:port/db_names
 APIURL=http://nginx/api/file/
+TRANSCRIPT_NUM_WORKERS=4
+TRANSCRIPT_NUM_THREADS=4
+ASR_MODEL_NAME=v2_ctc
 ```
+
+Доступные модели ASR (модель по умолчанию - v2_ctc):
+- v3_ctc
+- v3_rnnt
+- v3_e2e_ctc
+- v3_e2e_rnnt
+- v2_ctc
+- v2_rnnt
+- v1_ctc
+- v1_rnnt
 
 Скачать файл в text_processor/ruword2tags/ по ссылке в load.txt
 
