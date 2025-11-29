@@ -1,2 +1,7 @@
 *.wav
 *.mp3
+.env
+media
+transcript_server\tempmedia
+*.ckpt
+tag_server\cache

@@ -1,0 +1,30 @@
+FROM python:3.10
+
+RUN apt-get update && apt-get install -y \
+    sox \
+    libsox-fmt-mp3 \
+    ffmpeg \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m pip install --no-cache-dir --upgrade pip
+
+RUN python -m pip install --no-cache-dir sox numpy psycopg2 websocket-client ffmpeg-python webrtcvad scikit-learn scipy matplotlib requests
+
+RUN pip install git+https://github.com/wenet-e2e/wespeaker.git
+
+RUN pip install onnxruntime==1.16.3
+
+RUN git clone https://github.com/salute-developers/GigaAM.git /GigaAM && \
+    cd /GigaAM && pip install -e . && \
+    cd /
+
+RUN pip install PySoundFile
+
+# Fix numpy compatibility issue - install a compatible version
+RUN python -m pip install --force-reinstall numpy==1.23.5
+
+# Install pydub which is required by the transcript service
+RUN python -m pip install --no-cache-dir pydub
+
+WORKDIR /app

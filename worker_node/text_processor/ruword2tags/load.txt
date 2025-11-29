@@ -1,1 +1,0 @@
-https://huggingface.co/bogdal/ruword2tags/resolve/main/ruword2tags.db

@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+
+  transcript:
+    build:
+      dockerfile: ./docker_build/Dockerfile.base_audio_process_v2
+    image: base_audio_process_v2
+    restart: unless-stopped
+    volumes:
+      - ./transcript_server/transcript.py:/app/transcript.py
+      - ./transcript_server/tr_lib.py:/app/tr_lib.py
+      - ./transcript_server/media:/app/media
+      - ./transcript_server/models:/app/models
+      - ./transcript_server/tempmedia:/app/tempmedia
+      - ./transcript_server/models/cache:/root/.cache
+    env_file:
+      - .env
+    working_dir: /app
+    command: python transcript.py
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  text_processor:
+    build:
+      dockerfile: ./docker_build/Dockerfile.text_processing
+    image: text_processing
+    restart: unless-stopped
+    volumes:
+      - ./text_processor/cache:/root/.cache
+      - ./text_processor/textprocessor.py:/app/textprocessor.py
+      - ./text_processor/ruword2tags/ruword2tags.db:/root/.ruword2tags/ruword2tags.db
+      - ./text_processor/deeppavlov:/root/.deeppavlov
+    env_file:
+      - .env
+    working_dir: /app
+    command: python textprocessor.py
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  tag_server:
+    build:
+      dockerfile: ./docker_build/Dockerfile.text_processing
+    image: text_processing
+    restart: unless-stopped
+    volumes:
+      - ./tag_server/tagserver.py:/app/tagserver.py
+      - ./tag_server/cache:/root/.cache
+    env_file:
+      - .env
+    working_dir: /app
+    command: python tagserver.py
+    
+  file_api:
+    build:
+      dockerfile: ./docker_build/Dockerfile.baseweb
+    image: baseweb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./file_api/main.py:/app/main.py
+      - ./media:/app/media
+    #working_dir: /app
+    command: uvicorn main:app --port 8000 --host 0.0.0.0
+
+  backend_api:
+    build:
+      dockerfile: ./docker_build/Dockerfile.baseweb
+    image: baseweb
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      - ./backend_api/main.py:/app/main.py
+      - ./media:/app/media
+    working_dir: /app
+    command: uvicorn main:app --port 8001 --host 0.0.0.0
+    
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./web:/mnt/vp/web
+    depends_on:
+      - file_api
+      - backend_api

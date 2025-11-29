@@ -1,5 +1,5 @@
 curl --request POST \
-  --url http://192.168.0.172/api/file/files/ \
+  --url http://127.0.0.1/api/file/files/ \
   --header 'Content-Type: multipart/form-data' \
   --form 'call_start_ts=2023-01-22 11:25:04' \
   --form 'call_end_ts=2023-01-22 11:27:58' \

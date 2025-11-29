@@ -1,0 +1,17 @@
+FROM python:3.9
+
+RUN python -m pip install --no-cache-dir deeppavlov psycopg2
+
+RUN python -m deeppavlov install rusentiment_bert
+
+RUN python -m pip install --no-cache-dir \
+    git+https://github.com/Koziev/rulemma \
+    git+https://github.com/Koziev/rupostagger \
+    git+https://github.com/Koziev/rutokenizer \
+    python-crfsuite \
+    git+https://github.com/Koziev/ruword2tags \
+    git+https://github.com/Koziev/rusyllab \
+    gdown==3.3.1 \
+    pathlib
+
+WORKDIR /app

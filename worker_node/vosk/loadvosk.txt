@@ -1,2 +1,0 @@
-https://alphacephei.com/vosk/models/vosk-model-ru-0.42.zip
-https://alphacephei.com/vosk/models/vosk-model-spk-0.4.zip

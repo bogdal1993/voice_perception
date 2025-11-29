@@ -13,82 +13,30 @@
 
 **Установка**
 
-Установить БД postgres и запустить инициализирующий скрипт *initial.sql*
+1. Установить БД postgres и запустить инициализирующий скрипт *initial.sql*
 
-**Single node. GigaAM**
-Проще всего установить на одном сервере.
-Перейти в директорию full_node
-```
-cd full_node
-```
-
-в файле .env прописать/заменить свой DSN к БД postgresql
+2. Скопировать файл `.env_example` в `.env` и настроить параметры подключения к БД:
 ```
 DSN=postgresql://user:pass@server:port/db_names
+APIURL=http://nginx/api/file/
 ```
 
-Запустить через 
+
+**Сборка Docker образов**
+
+Для автоматической сборки Docker образов используйте команду:
+
+```
+docker-compose up --build
+```
+
+**Single node. GigaAM**
+
+Запустить через
 ```
 docker-compose up -d
 ```
 
-**Worker node. Vosk**
-
-
-1. Перейти в директорию worker_node
-```
-cd worker_node
-```
-2. в файле docker-compose.yml изменить параметры подключения к БД в DSN, вместо 
-```
-postgresql://user:pass@host:port/db
-```
-прописать ваши данные  
-
-
-3. в переменной VOSK_SERVER указать адрес текущей машины или вместо 127.0.0.1 прописать vosk  
-
-4. Скачать нужные файлы моделей
-
-в директорию 
-```
-cd vosk 
-```
-скачать и распаковать модели vosk по ссылкам из файла **loadvosk.txt**  
-
-
-в директорию 
-```
-text_processor\ruword2tags
-```
-скачиваем файл ruword2tags.db по ссылке в **load.txt**  
-
-5. Запустить через 
-```
-docker-compose up -d
-```
-
-**Web node**  
-
-
-Устанавливаем nginx и прописываем конфигурацию как в файле default. Если сервисы расположены на разных машинах, то необходимо прописать корректные адреса до них в секциях location -> proxy_pass.
-
-
-Если web node развернута на отдельном сервере, то указать в docker-compose.yml Правильный внешний адрес машины
-```
-APIURL: "http://127.0.0.1/api/file/"
-```
-
-**LLM node**  
-
-Скачать модель с помощью скрипта
-```
-llm_node\summarization_server\load_model.sh
-```
-Запустить сервер через 
-```
-docker-compose up -d
-```
 
 **Загрузка аудио**
 
