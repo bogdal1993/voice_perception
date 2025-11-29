@@ -4,6 +4,6 @@
 media
 transcript_server\tempmedia
 *.ckpt
-tag_server\cache
+tag_server\cache\
 *.pt
 *.db
