@@ -39,8 +39,18 @@ def split_audio_by_segments(audio_path, segments):
     for segment in segments:
         start = segment[1] * 1000  # Преобразуем секунды в миллисекунды
         end = segment[2] * 1000
-        segment_audio = audio[start:end]
-        segments_audio.append(segment_audio)
+        
+        # Если сегмент больше 19 секунд, разбиваем его на части
+        if (end - start) > 19000:  # 19 секунд в миллисекундах
+            current_start = start
+            while current_start < end:
+                current_end = min(current_start + 19000, end)
+                segment_audio = audio[current_start:current_end]
+                segments_audio.append(segment_audio)
+                current_start = current_end
+        else:
+            segment_audio = audio[start:end]
+            segments_audio.append(segment_audio)
     return segments_audio
 
 def transcribe_segments(segments_audio, base_filename):
