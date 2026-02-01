@@ -2,4 +2,6 @@ FROM python:3.9
 
 RUN python -m pip install fastapi uvicorn gunicorn databases sqlalchemy asyncpg python-multipart aiofiles httpx --no-cache
 
+RUN python -m pip install passlib bcrypt==4.0.1 pyjwt pydantic-settings --no-cache
+
 WORKDIR /app

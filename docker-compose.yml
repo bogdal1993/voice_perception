@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   transcript:
@@ -78,10 +76,10 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend_api/main.py:/app/main.py
+      - ./backend_api:/app
       - ./media:/app/media
     working_dir: /app
-    command: uvicorn main:app --port 8001 --host 0.0.0.0
+    command: bash -c "pip install pydantic-settings && uvicorn app.main:app --port 8001 --host 0.0.0.0"
     
   nginx:
     image: nginx:latest

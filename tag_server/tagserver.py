@@ -1,7 +1,9 @@
 import os, time, json
 from psycopg2 import pool
 from collections import defaultdict
+
 DSN = os.getenv('DSN')
+DB_SCHEMA = os.getenv('DB_SCHEMA', 'vp')  # Default schema is 'vp' if not specified
 threaded_postgreSQL_pool = pool.ThreadedConnectionPool(1, 3, DSN)
 
 def get_db_connection():
@@ -70,7 +72,7 @@ def process_call_tag(call_uuid, task_data, frases_2_tag0, frases0,frases_2_tag1,
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT transcription FROM vp.calls_transcription where call_uuid = %s limit 1",(call_uuid,))
+        cur.execute(f"SELECT transcription FROM {DB_SCHEMA}.calls_transcription where call_uuid = %s limit 1",(call_uuid,))
         result = cur.fetchone()
         cur.close()
         transcription = result[0]
@@ -91,10 +93,10 @@ def process_call_tag(call_uuid, task_data, frases_2_tag0, frases0,frases_2_tag1,
         conn2 = get_db_connection()
         try:
             cur2 = conn2.cursor()
-            cur2.execute("insert into vp.calls_tags values(%s,%s)",(call_uuid,json.dumps(tags_set),))
-            
+            cur2.execute(f"insert into {DB_SCHEMA}.calls_tags values(%s,%s)",(call_uuid,json.dumps(tags_set),))
+
             task_data['tag_process'] = "OK"
-            cur2.execute("UPDATE vp.tasks SET task = %s where call_uuid = %s",(json.dumps(task_data), call_uuid,))
+            cur2.execute(f"UPDATE {DB_SCHEMA}.tasks SET task = %s where call_uuid = %s",(json.dumps(task_data), call_uuid,))
             conn2.commit()
             cur2.close()
         finally:
@@ -116,10 +118,10 @@ while 1:
         try:
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute("SELECT call_uuid, task FROM vp.tasks where task->>'tag_process' = 'ready' limit 30")
+            cur.execute(f"SELECT call_uuid, task FROM {DB_SCHEMA}.tasks where task->>'tag_process' = 'ready' limit 30")
             tasks = cur.fetchall()
-            
-            cur.execute("SELECT tag_name, tag_spk, tag_texts::json FROM vp.tags_core")
+
+            cur.execute(f"SELECT tag_name, tag_spk, tag_texts::json FROM {DB_SCHEMA}.tags_core")
             tag_core = cur.fetchall()
             cur.close()
             break # Success, exit retry loop
@@ -165,7 +167,7 @@ while 1:
         i+=1
         call_uuid,task_data = task
         process_call_tag(call_uuid,task_data,frases_2_tag0,frases0,frases_2_tag1,frases1)
-        #cur.execute("update vp.transcript_queue set status = 'processing' where call_uuid = %s",(call_uuid,))
+        #cur.execute(f"update {DB_SCHEMA}.transcript_queue set status = 'processing' where call_uuid = %s",(call_uuid,))
         #conn.commit()
     if i==0:
         time.sleep(5)

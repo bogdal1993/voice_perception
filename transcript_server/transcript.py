@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация
 DSN = os.getenv('DSN')  # Получение DSN из переменных окружения
+DB_SCHEMA = os.getenv('DB_SCHEMA', 'vp')  # Получение схемы БД из переменных окружения, по умолчанию 'vp'
 BASE_TEMP_PATH = "./tempmedia"
 MAX_RETRIES = 3  # Максимальное количество попыток повторного подключения
-RETRY_DELAY = 5  # Задержка между попытками (в секундах)
-NUM_WORKERS = int(os.getenv('TRANSCRIPT_NUM_WORKERS', 2)) 
+RETRY_DELAY = 5 # Задержка между попытками (в секундах)
+NUM_WORKERS = int(os.getenv('TRANSCRIPT_NUM_WORKERS', 2))
+TRANSCRIPT_API_KEY = os.getenv('TRANSCRIPT_API_KEY', '')  # API ключ для доступа к file_api
 
 import zipfile
 import requests
@@ -118,7 +120,12 @@ def get_db_connection(db_pool) -> Optional[psycopg2.extensions.connection]:
 def download_file(file_path: str, call_uuid: str, file_server: str) -> bool:
     logger.debug(f"Начало загрузки аудиофайла {call_uuid} с сервера {file_server} по пути {file_path}...")
     try:
-        response = requests.get(f"{file_server}/file/{call_uuid}", stream=True)
+        headers = {}
+        if TRANSCRIPT_API_KEY:
+            headers['Authorization'] = f'Bearer {TRANSCRIPT_API_KEY}'
+            logger.debug(f"Используется API ключ для аутентификации")
+        
+        response = requests.get(f"{file_server}/file/{call_uuid}", stream=True, headers=headers)
         if response.status_code == 200:
             with open(file_path, 'wb') as f:
                 f.write(response.content)
@@ -207,6 +214,11 @@ def worker(task_queue: multiprocessing.JoinableQueue, db_pool: psycopg2.pool.Thr
         logger.error("Воркер не может обработать задачи без process_audio")
         logger.error("Проверьте, что все зависимости установлены и доступны в контейнере")
         return
+    except AttributeError as e:
+        logger.error(f"Неизвестная ошибка при импорте process_audio: {e}")
+        logger.error(f"Тип ошибки: {type(e).__name__}")
+        logger.error(f"Трассировка стека: {str(e)}")
+        return
     except Exception as e:
         logger.error(f"Неизвестная ошибка при импорте process_audio: {e}")
         logger.error(f"Тип ошибки: {type(e).__name__}")
@@ -264,7 +276,7 @@ def worker(task_queue: multiprocessing.JoinableQueue, db_pool: psycopg2.pool.Thr
                 cur = conn.cursor()
                 logger.debug(f"Сохранение транскрипции в таблицу calls_transcription для задачи {call_uuid}...")
                 cur.execute(
-                    "INSERT INTO vp.calls_transcription(call_uuid, transcription) VALUES (%s, %s) "
+                    f"INSERT INTO {DB_SCHEMA}.calls_transcription(call_uuid, transcription) VALUES (%s, %s) "
                     "ON CONFLICT ON CONSTRAINT calls_transcription_pkey DO NOTHING;",
                     (call_uuid, json.dumps(transcriptions))
                 )
@@ -273,7 +285,7 @@ def worker(task_queue: multiprocessing.JoinableQueue, db_pool: psycopg2.pool.Thr
                 
                 logger.debug(f"Обновление статуса задачи в таблице tasks для задачи {call_uuid}...")
                 cur.execute(
-                    "INSERT INTO vp.tasks(call_uuid, task) VALUES (%s, %s) "
+                    f"INSERT INTO {DB_SCHEMA}.tasks(call_uuid, task) VALUES (%s, %s) "
                     "ON CONFLICT ON CONSTRAINT tasks_pkey DO NOTHING;",
                     (call_uuid, '{"transcript": "OK","text_process": "ready","tag_process":"wait"}')
                 )
@@ -281,7 +293,7 @@ def worker(task_queue: multiprocessing.JoinableQueue, db_pool: psycopg2.pool.Thr
                 logger.debug(f"Статус задачи для {call_uuid} обновлен в таблице tasks.")
                 
                 logger.debug(f"Удаление задачи из очереди transcript_queue для {call_uuid}...")
-                cur.execute("DELETE FROM vp.transcript_queue WHERE call_uuid = %s", (call_uuid,))
+                cur.execute(f"DELETE FROM {DB_SCHEMA}.transcript_queue WHERE call_uuid = %s", (call_uuid,))
                 conn.commit()
                 logger.debug(f"Задача {call_uuid} удалена из очереди transcript_queue.")
                 
@@ -313,13 +325,16 @@ def main_loop(db_pool: psycopg2.pool.ThreadedConnectionPool, task_queue: multipr
                 conn = get_db_connection(db_pool)
                 cur = conn.cursor()
                 logger.debug("Выборка задач из очереди transcript_queue с готовыми к обработке записями...")
-                cur.execute("SELECT file_path, file_server, call_uuid FROM vp.transcript_queue WHERE status = 'ready' LIMIT 30")
+                cur.execute(f"SELECT file_path, file_server, call_uuid FROM {DB_SCHEMA}.transcript_queue WHERE status = 'ready' LIMIT 30")
                 tasks = cur.fetchall()
-                logger.info(f"Найдено {len(tasks)} задач для обработки.")
+                if tasks:
+                    logger.info(f"Найдено {len(tasks)} задач для обработки.")
+                else:
+                    logger.debug("Найдено 0 задач для обработки.")
                 for task in tasks:
                     file_path, file_server, call_uuid = task
                     logger.debug(f"Обновление статуса задачи {call_uuid} на 'processing'...")
-                    cur.execute("UPDATE vp.transcript_queue SET status = 'processing' WHERE call_uuid = %s", (call_uuid,))
+                    cur.execute(f"UPDATE {DB_SCHEMA}.transcript_queue SET status = 'processing' WHERE call_uuid = %s", (call_uuid,))
                     conn.commit()
                     logger.debug(f"Добавление задачи {call_uuid} в очередь для обработки воркеров...")
                     logger.debug(f"Размер очереди перед добавлением: {task_queue.qsize()}")

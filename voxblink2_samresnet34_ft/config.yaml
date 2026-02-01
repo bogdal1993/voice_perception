@@ -1,0 +1,32 @@
+# Configuration for voxblink2_samresnet34_ft model
+model:
+  name: "voxblink2_samresnet34_ft"
+  backbone: "resnet34"
+  pooling_type: "SAP"
+  num_classes: 5994
+  embed_dim: 256
+
+model_path: "avg_model.pt"
+
+# Feature extraction parameters
+feature_args:
+  sample_rate: 16000
+  window_size: 0.025
+  window_shift: 0.01
+  n_mels: 80
+
+# Training parameters
+training:
+  batch_size: 32
+  num_workers: 4
+  epochs: 100
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+  milestones: [30, 60, 90]
+
+# Inference parameters
+inference:
+  embedding_node: "stats"
+  normalize: true
+  threshold: 0.5

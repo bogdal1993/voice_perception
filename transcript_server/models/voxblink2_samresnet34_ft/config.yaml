@@ -1,0 +1,52 @@
+data_type: shard
+dataloader_args:
+  batch_size: 128
+  drop_last: true
+  num_workers: 16
+  pin_memory: false
+  prefetch_factor: 8
+dataset_args:
+  aug_prob: 0.6
+  fbank_args:
+    dither: 1.0
+    frame_length: 25
+    frame_shift: 10
+    num_mel_bins: 80
+  filter: true
+  filter_args:
+    max_num_frames: 800
+    min_num_frames: 100
+  num_frms: 200
+  resample_rate: 16000
+  sample_num_per_epoch: 0
+  shuffle: true
+  shuffle_args:
+    shuffle_size: 2500
+  spec_aug: false
+  spec_aug_args:
+    max_f: 8
+    max_t: 10
+    num_f_mask: 1
+    num_t_mask: 1
+    prob: 0.6
+  speed_perturb: true
+enable_amp: false
+exp_dir: exp/samresnet34/
+gpus:
+- 0
+- 1
+log_batch_interval: 100
+loss: CrossEntropyLoss
+loss_args: {}
+margin_scheduler: MarginScheduler
+margin_update:
+  epoch_iter: 4265
+  final_margin: 0.2
+  fix_start_epoch: 40
+  increase_start_epoch: 20
+  increase_type: exp
+  initial_margin: 0.0
+  update_margin: true
+model: SimAM_ResNet34_ASP
+model_args:
+  embed_dim: 256

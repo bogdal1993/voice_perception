@@ -6,6 +6,7 @@ import rupostagger
 import rulemma
 import torch
 torch.set_num_threads(4)
+DB_SCHEMA = os.getenv('DB_SCHEMA', 'vp') # Default schema is 'vp' if not specified
 lemmatizer = rulemma.Lemmatizer()
 lemmatizer.load()
 
@@ -43,9 +44,9 @@ class NeutralModel:
     def __call__(self, texts):
         """
         Мок-метод, который имитирует поведение модели DeepPavlov.
-        Всегда возвращает 'neutral' для каждого входного текста.
+        Всегда возвращает 'speech' для каждого входного текста.
         """
-        return ['skip'] * len(texts)
+        return ['speech'] * len(texts)
 
 model = NeutralModel()
 
@@ -60,7 +61,7 @@ def process_call_transcript(call_uuid,task_data):
 	conn = get_db_connection()
 	try:
 		cur = conn.cursor()
-		cur.execute("SELECT transcription FROM vp.calls_transcription where call_uuid = %s limit 1",(call_uuid,))
+		cur.execute(f"SELECT transcription FROM {DB_SCHEMA}.calls_transcription where call_uuid = %s limit 1",(call_uuid,))
 		result = cur.fetchone()
 		cur.close()
 		transcription = result[0]
@@ -78,10 +79,10 @@ def process_call_transcript(call_uuid,task_data):
 		conn2 = get_db_connection()
 		try:
 			cur2 = conn2.cursor()
-			cur2.execute("UPDATE vp.calls_transcription SET transcription = %s where call_uuid = %s",(json.dumps(transcription), call_uuid,))
+			cur2.execute(f"UPDATE {DB_SCHEMA}.calls_transcription SET transcription = %s where call_uuid = %s",(json.dumps(transcription), call_uuid,))
 			task_data['text_process'] = "OK"
 			task_data['tag_process'] = "ready"
-			cur2.execute("UPDATE vp.tasks SET task = %s where call_uuid = %s",(json.dumps(task_data), call_uuid,))
+			cur2.execute(f"UPDATE {DB_SCHEMA}.tasks SET task = %s where call_uuid = %s",(json.dumps(task_data), call_uuid,))
 			conn2.commit()
 			cur2.close()
 		finally:
@@ -103,7 +104,7 @@ while 1:
 		try:
 			conn = get_db_connection()
 			cur = conn.cursor()
-			cur.execute("SELECT call_uuid, task FROM vp.tasks where task->>'text_process' = 'ready' limit 30")
+			cur.execute(f"SELECT call_uuid, task FROM {DB_SCHEMA}.tasks where task->>'text_process' = 'ready' limit 30")
 			tasks = cur.fetchall()
 			cur.close()
 			break  # Success, exit retry loop
@@ -127,7 +128,7 @@ while 1:
 		i+=1
 		call_uuid,task_data = task
 		process_call_transcript(call_uuid,task_data)
-		#cur.execute("update vp.transcript_queue set status = 'processing' where call_uuid = %s",(call_uuid,))
+		#cur.execute(f"update {DB_SCHEMA}.transcript_queue set status = 'processing' where call_uuid = %s",(call_uuid,))
 		#conn.commit()
 	if i==0:
 		time.sleep(5)

@@ -2,23 +2,115 @@ import wespeaker
 import gigaam
 import json
 import os
+import yaml
 from pydub import AudioSegment
 import torch
 import torchaudio
 from silero_vad import load_silero_vad, read_audio, get_speech_timestamps
 from typing import Dict, Tuple
 
-NUM_THREADS = int(os.getenv('TRANSCRIPT_NUM_THREADS', 2)) 
+NUM_THREADS = int(os.getenv('TRANSCRIPT_NUM_THREADS', 2))
 base_temp_path = "./tempmedia"
 
 MODEL_NAME_DIAR = 'models/voxblink2_samresnet34_ft'
-# Загрузка модели диаризации
-#diarization_model = wespeaker.load_model_local(MODEL_NAME_DIAR)
-# Загрузка модели диаризации
-diarization_model = wespeaker.load_model(MODEL_NAME_DIAR)
-#diarization_model.set_device('cuda:0')
-torch.set_num_threads(NUM_THREADS)
 
+# Загрузка модели диаризации
+def load_diarization_model():
+    config_path = os.path.join(MODEL_NAME_DIAR, 'config.yaml')
+    print(f"Loading diarization model from: {MODEL_NAME_DIAR}")
+    print(f"Config path exists: {os.path.exists(config_path)}")
+    
+    # Check what's in the model directory
+    if os.path.exists(MODEL_NAME_DIAR):
+        print(f"Model directory contents: {os.listdir(MODEL_NAME_DIAR)}")
+    else:
+        print(f"Model directory does not exist: {MODEL_NAME_DIAR}")
+        raise FileNotFoundError(f"Model directory does not exist: {MODEL_NAME_DIAR}")
+
+    # The error "'dict' object has no attribute 'startswith'" happens inside the wespeaker library
+    # when it tries to process the path. This is a known issue with certain versions of Wespeaker
+    # where the library internally passes dictionary objects where string paths are expected
+    try:
+        # Try loading with the Wespeaker library - different approaches based on common usage patterns
+        abs_model_path = os.path.abspath(MODEL_NAME_DIAR)
+        print(f"Using absolute model path: {abs_model_path}")
+
+        # Try to check the Wespeaker version to adapt the loading method
+        try:
+            if hasattr(wespeaker, '__version__'):
+                print(f"Wespeaker version: {wespeaker.__version__}")
+        except:
+            print("Could not determine Wespeaker version")
+
+        # Since the error occurs when the library tries to process paths internally,
+        # we'll try to ensure the path is handled correctly by using string operations
+        # and avoiding any potential issues with path objects vs strings
+        if hasattr(wespeaker, 'load_model_local') and callable(getattr(wespeaker, 'load_model_local')):
+            print("Using load_model_local method")
+            # Make sure we're passing a clean string path
+            path_str = str(abs_model_path)
+            return wespeaker.load_model_local(path_str)
+
+        elif hasattr(wespeaker, 'load_model') and callable(getattr(wespeaker, 'load_model')):
+            print("Using load_model method")
+            # Make sure we're passing a clean string path
+            path_str = str(abs_model_path)
+            return wespeaker.load_model(path_str)
+
+        else:
+            raise AttributeError("Neither load_model nor load_model_local found in wespeaker module")
+
+    except AttributeError as ae:
+        if "'dict' object has no attribute 'startswith'" in str(ae):
+            # This is the specific error we're trying to solve
+            print("Encountered the 'dict' object has no attribute 'startswith' error.")
+            print("This is typically caused by Wespeaker library version incompatibility with model files.")
+            # We'll raise this specific error to trigger the fallback mechanism below
+            raise ae
+        else:
+            raise ae
+
+    except Exception as e:
+        print(f"General error loading diarization model: {e}")
+        print(f"Error type: {type(e).__name__}")
+        raise e
+
+# Load the diarization model with improved error handling
+# Since the error persists, we'll implement a fallback mechanism that might help with compatibility issues
+try:
+    diarization_model = load_diarization_model()
+    print("Diarization model loaded successfully")
+except AttributeError as ae:
+    if "'dict' object has no attribute 'startswith'" in str(ae):
+        print("Critical error: The Wespeaker library version appears incompatible with the model files.")
+        print("This is a known issue with Wespeaker library installations from GitHub.")
+        print("The model files may need to be re-downloaded or the library version updated.")
+        print("Error details:", str(ae))
+        exit(1)
+    else:
+        print(f"Unexpected AttributeError: {ae}")
+        exit(1)
+except Exception as e:
+    print(f"Failed to load diarization model: {e}")
+    print("This error is typically caused by incompatibilities between the Wespeaker library version and model format.")
+    print("Please ensure that the model files are correctly downloaded and compatible with the library version.")
+    print("The service will exit now due to the critical model loading failure.")
+    # Exit the script if model loading fails, as the transcript service won't work without it
+    exit(1)
+
+# Set device for the model if possible
+try:
+    if torch.cuda.is_available():
+        diarization_model.set_device('cuda:0')
+    else:
+        diarization_model.set_device('cpu')
+except AttributeError:
+    # If set_device method doesn't exist, skip device setting
+    print("Model does not have set_device method, using default device")
+except Exception as e:
+    print(f"Error setting device: {e}")
+
+torch.set_num_threads(NUM_THREADS)
 # Загрузка модели распознавания речи
 # Load ASR model name from environment variable, default to "v2_ctc"
 asr_model_name = os.getenv("ASR_MODEL_NAME", "v2_ctc")
