@@ -1,4 +1,3 @@
-# from deeppavlov import build_model, configs
 import os, time, json
 from psycopg2 import pool
 import rutokenizer
@@ -37,13 +36,9 @@ def get_db_connection():
             time.sleep(1)  # Wait before retry
     return None
 
-#model = build_model(configs.classifiers.rusentiment_bert, download=False)
-# model = build_model(configs.classifiers.rusentiment_convers_bert, download=True)
-
 class NeutralModel:
     def __call__(self, texts):
         """
-        Мок-метод, который имитирует поведение модели DeepPavlov.
         Всегда возвращает 'speech' для каждого входного текста.
         """
         return ['speech'] * len(texts)

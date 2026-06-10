@@ -29,7 +29,6 @@ services:
       - ./text_processor/cache:/root/.cache
       - ./text_processor/textprocessor.py:/app/textprocessor.py
       - ./text_processor/ruword2tags/ruword2tags.db:/root/.ruword2tags/ruword2tags.db
-      - ./text_processor/deeppavlov:/root/.deeppavlov
     env_file:
       - .env
     working_dir: /app
