@@ -1,8 +1,6 @@
 FROM python:3.9
 
-RUN python -m pip install --no-cache-dir deeppavlov psycopg2
-
-RUN python -m deeppavlov install rusentiment_bert
+RUN python -m pip install --no-cache-dir psycopg2
 
 RUN python -m pip install --no-cache-dir \
     git+https://github.com/Koziev/rulemma \

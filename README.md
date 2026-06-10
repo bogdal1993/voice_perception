@@ -70,7 +70,7 @@ docker-compose up -d
 ![Alt text](https://github.com/bogdal1993/voice_perception/blob/main/docs/Annotation%202023-04-30%20143821.jpg?raw=true "Интерфейс поиска по тексту")
 
 
-В проекте используются модели Vosk, DeepPavlov, I.Koziev
+В проекте используются модели Vosk, I.Koziev
 
 
 Присоединяйтесь к сообществу https://t.me/voiceperception
